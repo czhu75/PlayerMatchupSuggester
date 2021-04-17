@@ -3,10 +3,16 @@ from bs4 import BeautifulSoup
 import re
 import json
 import csv
+import os
 
-csv_filename = "C:\Tools\PlayerMatchupSuggester\Fantrax-Team-Roster-Major League Zookeepers (MLZ).csv"
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\'
+csv_filename = __location__ + "Fantrax-Team-Roster-Major League Zookeepers (MLZ).csv"
 daily_matchups_url = "https://baseballsavant.mlb.com/daily_matchups"
 
+'''
+filename: Fantrax CSV filename to read player names from
+Reads batter names from a Fantrax roster CSV and returns them in a list
+'''
 def getBattersFromCsv(filename):
     batters = []
 
@@ -26,6 +32,10 @@ def getBattersFromCsv(filename):
 
     return batters
 
+'''
+Requests daily matchups from baseball savant
+NOTE: Each batter v pitcher matchup is a JSON object. 'matchups_json' consists of multiple JSON objects.
+'''
 def getMatchupsJSON():
     # get matchup data JSON from baseball savant
     daily_matchups_page = requests.get(daily_matchups_url)
@@ -39,14 +49,31 @@ def getMatchupsJSON():
     matchups_json = json.loads(m.groups()[0])
     return matchups_json
 
+def writeMatchupsToCSV(matchups_json, batters):
+    with open(__location__ + 'daily_matchup.csv', 'w', newline='') as csv_file:
+        # get JSON key names and print to first row of CSV
+        fieldnames_list = []
+        for key in matchups_json[0]:
+            fieldnames_list.append(key)
+        
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames_list)
+        writer.writeheader()
+        for matchup in matchups_json:
+            if matchup["player_name"] in batters:
+                writer.writerow(matchup)
+
 def main():
     batters = getBattersFromCsv(csv_filename)
     matchups_json = getMatchupsJSON()
 
+    print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}".format("Batter", "Pitcher", "PA", "xBA", "xwOBA"))
     for matchup in matchups_json:
         if matchup["player_name"] in batters:
-            print(matchup)
+                print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}".format(matchup["player_name"], matchup["pitcher"], matchup["pa"], matchup["xba"], matchup["xwoba"]))
+
+    writeMatchupsToCSV(matchups_json, batters)
     
+
 
 if __name__ == '__main__':
     main()
