@@ -66,10 +66,11 @@ def main():
     batters = getBattersFromCsv(csv_filename)
     matchups_json = getMatchupsJSON()
 
-    print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}".format("Batter", "Pitcher", "PA", "xBA", "xwOBA"))
+    print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}{5:<8}".format("Batter", "Pitcher", "PA", "xBA", "xwOBA", "P/PA"))
     for matchup in matchups_json:
         if matchup["player_name"] in batters:
-                print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}".format(matchup["player_name"], matchup["pitcher"], matchup["pa"], matchup["xba"], matchup["xwoba"]))
+                p_pa = int(matchup["total_pitches"]) / int(matchup["pa"])  # pitches per plate appearance
+                print("{0:<20}{1:<20}{2:<6}{3:<8}{4:<8}{5:<8.3f}".format(matchup["player_name"], matchup["pitcher"], matchup["pa"], matchup["xba"], matchup["xwoba"], p_pa))
 
     writeMatchupsToCSV(matchups_json, batters)
     
